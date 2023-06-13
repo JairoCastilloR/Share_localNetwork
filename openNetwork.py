@@ -1,6 +1,6 @@
 #imports ...
 import webbrowser
-from ipaddress import ip_address
+#from ipaddress import ip_address
 import socket
 import http.server
 import socketserver
@@ -20,9 +20,22 @@ def handler_from(directory):
 
 #Ip address
 
-name_pc = socket.gethostname()
-ip_address = socket.gethostbyname(name_pc)
+#name_pc = socket.gethostname()
+#ip_address = socket.gethostbyname(name_pc)
 
+def get_private_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(('10.255.255.255', 1))
+        ip = s.getsockname()[0]
+    except:
+        ip = '127.0.0.1'
+    finally:
+        s.close()
+    return ip
+
+ip_address =get_private_ip()
+print(f"Serving on {ip_address}")
 #Notifications
 
 notification = Notify()
@@ -69,7 +82,7 @@ while True:
         break
     if event =="-CONFIRM-":
         path = values['-FOLDER-']
-        with socketserver.TCPServer(('', PORT), handler_from(path)) as httpd:
+        with socketserver.TCPServer((ip_address, PORT), handler_from(path)) as httpd:
             notification.title = "Open Lan Network"      #notification when is open
             notification.message = f'Server is open in {ip_address}:{PORT}'
             webbrowser.open(f'http://{ip_address}:{PORT}')
