@@ -1,4 +1,5 @@
 #imports ...
+
 import os
 import webbrowser
 import cgi
@@ -14,6 +15,8 @@ from notifypy import Notify
 
 PORT = 1397
 chosen_path = None
+
+#Upload files and form
 
 class CustomHandler(http.server.SimpleHTTPRequestHandler):
     
@@ -125,7 +128,7 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             )
             uploaded_file = form['file']
             file_name = os.path.basename(uploaded_file.filename)
-            file_path = os.path.join(self.directory, file_name)
+            file_path = os.path.join(chosen_path, file_name)
             
 
             with open(file_path, 'wb') as f:
@@ -138,6 +141,8 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         else:
             self.send_response(403)
             self.wfile.write(b'Access denied')
+            
+            
 #Ip address
 
 #name_pc = socket.gethostname()
@@ -198,7 +203,7 @@ list_path=[
     ]
 ]
 
-# --- full layout ---
+# full layout 
 
 layout= [
     [
@@ -239,5 +244,5 @@ window.close
 
 #notifications
 
-#shortcuts to open and close the aplication => modify bash to facility shortcut
+#shortcuts to open and close the aplication => modify bash to facility shortcut 
 
