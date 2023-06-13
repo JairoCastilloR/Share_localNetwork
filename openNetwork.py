@@ -1,5 +1,7 @@
 #imports ...
+import os
 import webbrowser
+import cgi
 #from ipaddress import ip_address
 import socket
 import http.server
@@ -11,13 +13,47 @@ from notifypy import Notify
 
 PORT = 1397
 
-def handler_from(directory):
-    def _init(self, *args, **kwargs):
-        return http.server.SimpleHTTPRequestHandler.__init__(self, *args, directory=self.directory, **kwargs)
-    return type(f'HandlerFrom<{directory}>',
-                (http.server.SimpleHTTPRequestHandler,),
-                {'__init__': _init, 'directory': directory})
 
+class CustomHandler(http.server.SimpleHTTPRequestHandler):
+    def do_GET(self):
+        if self.path == '/upload':
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html')
+            self.end_headers()
+            self.wfile.write(b"""
+                <html>
+                <body>
+                    <form action="/upload" method="post" enctype="multipart/form-data">
+                        <input type="file" name="file">
+                        <input type="submit" value="Upload">
+                    </form>
+                </body>
+                </html>
+            """)
+        else:
+            super().do_GET()
+
+    def do_POST(self):
+        if self.path == '/upload':
+            form = cgi.FieldStorage(
+                fp=self.rfile,
+                headers=self.headers,
+                environ={'REQUEST_METHOD': 'POST', 'CONTENT_TYPE': self.headers['Content-Type']}
+            )
+            uploaded_file = form['file']
+            file_name = os.path.basename(uploaded_file.filename)
+            file_path = os.path.join(self.directory, file_name)
+
+            with open(file_path, 'wb') as f:
+                f.write(uploaded_file.file.read())
+
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html')
+            self.end_headers()
+            self.wfile.write(b'File uploaded successfully')
+        else:
+            self.send_response(403)
+            self.wfile.write(b'Access denied')
 #Ip address
 
 #name_pc = socket.gethostname()
@@ -82,7 +118,7 @@ while True:
         break
     if event =="-CONFIRM-":
         path = values['-FOLDER-']
-        with socketserver.TCPServer((ip_address, PORT), handler_from(path)) as httpd:
+        with socketserver.TCPServer((ip_address, PORT), CustomHandler) as httpd:
             notification.title = "Open Lan Network"      #notification when is open
             notification.message = f'Server is open in {ip_address}:{PORT}'
             webbrowser.open(f'http://{ip_address}:{PORT}')
