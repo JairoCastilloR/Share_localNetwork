@@ -9,7 +9,8 @@ import socket
 import http.server
 import socketserver
 import PySimpleGUI as sg 
-from notifypy import Notify  
+from notifypy import Notify
+from urllib.parse import unquote  
  
 #PORT and directory
 
@@ -22,7 +23,9 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
     
     def translate_path(self, path):
         global chosen_path
-        return os.path.join(chosen_path, self.path[1:])
+        print('este es el path ' , self.path[1:2])
+        print('este es el path ' , unquote(self.path[1:]))
+        return os.path.join(chosen_path, unquote(self.path[1:]))
     
     def do_GET(self):
         if self.path == '/upload':
@@ -246,3 +249,4 @@ window.close
 
 #shortcuts to open and close the aplication => modify bash to facility shortcut 
 
+#need to improve security, memory and optimization
